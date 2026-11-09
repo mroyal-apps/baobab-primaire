@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. Français seulement.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.4', date: '09/11/2026' };
+const VERSION_APP = { num: '0.5', date: '09/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }

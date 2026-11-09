@@ -163,9 +163,15 @@ function pageUeben(k, id, memo) {
       <a href="#/fiche/${k}/${id}" class="retour">🖨️ ${t('u_fiche')}</a>
     </div>
     <div class="ueben-tete">
-      <div class="perso" id="perso">${amaraSVG()}</div>
+      <div class="perso-col"><div class="perso" id="perso">${amaraSVG()}</div><button type="button" class="nom-perso" id="nom-perso"></button></div>
       <div class="bulle" id="bulle">Bonjour ! On y va !</div>
     </div>
+    <form class="form-prenom" id="form-prenom" hidden>
+      <label>${t('u_ton_prenom')} <input id="in-prenom" maxlength="20" autocomplete="off" placeholder="${t('u_prenom_ex')}"></label>
+      <span class="choix-avatar"><label><input type="radio" name="avatar" value="amara"> 👧 ${t('u_fille')}</label><label><input type="radio" name="avatar" value="noah"> 👦 ${t('u_garcon')}</label></span>
+      <button class="btn principal" type="submit">${t('u_ok')}</button>
+      <button class="btn" type="button" id="b-sans-prenom">${t('u_sans_prenom')}</button>
+    </form>
     <h1 class="ueben-titre">${base.nom} <small>${NOMCL(k)}</small></h1>
     ${optsVisibles.length ? `<div class="options ueben-choix-ex">${optsVisibles.map(o => champ(o, theme)).join('')}</div>` : ''}
     <div class="ueben-barre">
@@ -186,6 +192,10 @@ function pageUeben(k, id, memo) {
   remettreOptions(memo);
   let total = 0, faits = 0, etoiles = 0, f, uebung = null, qui = 'amara';
   const zone = () => document.getElementById('u-zone');
+  // Le prénom de l'enfant (gardé sur cet appareil) : il remplace Amara / Noah
+  const enfant = () => { try { return JSON.parse(localStorage.getItem('baobab-primaire.enfant')) || null; } catch (e) { return null; } };
+  const nomQui = () => { const e = enfant(); return e && e.prenom ? e.prenom : PERSOS[qui].nom; };
+  const majNom = () => { const b = document.getElementById('nom-perso'); if (b) b.textContent = enfant() ? '✏️ ' + nomQui() : '✏️ ' + t('u_mon_prenom'); };
   const dire = (txt, humeur) => { document.getElementById('bulle').textContent = txt; document.getElementById('perso').innerHTML = personnageSVG(qui, humeur); };
   const maj = () => {
     document.getElementById('compte').textContent = `${faits} / ${total}`;
@@ -227,7 +237,8 @@ function pageUeben(k, id, memo) {
     const premier = !c.essais;
     faits++; if (premier) etoiles++;
     c.classList.remove('faux'); c.classList.add('ok');
-    sonJuste(); dire(BRAVO[Math.floor(Math.random() * BRAVO.length)] + (premier ? ' ⭐' : ''), 'content');
+    const e = enfant(), br = BRAVO[Math.floor(Math.random() * BRAVO.length)];
+    sonJuste(); dire((e && e.prenom && Math.random() < 0.4 ? br.replace(/ !$/, ', ' + e.prenom + ' !') : br) + (premier ? ' ⭐' : ''), 'content');
     maj(); if (faits === total) fini(); else suivant(c);
   };
   const rate = (c, attendu, indice) => {
@@ -447,11 +458,30 @@ function pageUeben(k, id, memo) {
     const z = zone();
     z.innerHTML = f.rendu(true);
     total = transformer(z); faits = 0; etoiles = 0; maj();
-    qui = etat.graine % 2 ? 'noah' : 'amara';   // Amara et Noah se relaient
-    dire('Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
+    const e = enfant();
+    qui = e && e.avatar ? e.avatar : etat.graine % 2 ? 'noah' : 'amara';   // Amara et Noah se relaient, sauf si l'enfant a mis son prénom
+    majNom();
+    dire(e && e.prenom ? 'Bonjour ' + e.prenom + ' ! ' + f.consigne : 'Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
     if (libre) setTimeout(() => suivant(null), 50);
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
+  // Formulaire « mon prénom »
+  const fp = document.getElementById('form-prenom');
+  document.getElementById('nom-perso').onclick = () => {
+    const e = enfant() || {}; fp.hidden = !fp.hidden;
+    document.getElementById('in-prenom').value = e.prenom || '';
+    fp.querySelectorAll('input[name=avatar]').forEach(r => r.checked = r.value === (e.avatar || qui));
+    if (!fp.hidden) document.getElementById('in-prenom').focus();
+  };
+  fp.onsubmit = ev => {
+    ev.preventDefault();
+    const prenom = document.getElementById('in-prenom').value.trim().replace(/\s+/g, ' ').slice(0, 20);
+    const av = (fp.querySelector('input[name=avatar]:checked') || {}).value || 'amara';
+    try { if (prenom) localStorage.setItem('baobab-primaire.enfant', JSON.stringify({ prenom: maj1(prenom), avatar: av })); else localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {}
+    fp.hidden = true; qui = av; majNom();
+    dire(prenom ? 'Bonjour ' + maj1(prenom) + ' ! ' + f.consigne : 'Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
+  };
+  document.getElementById('b-sans-prenom').onclick = () => { try { localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {} fp.hidden = true; qui = etat.graine % 2 ? 'noah' : 'amara'; majNom(); dire('Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content'); };
   document.getElementById('u-neu').onclick = () => { etat.graine = nouvelleGraine(); dessiner(); };
   document.getElementById('u-lire').onclick = () => { etat.lent = uebung === 'diktat' || !!f.dictee; lire(f.lireTexte || f.dictee || uebung === 'lesen' || uebung === 'geschichte' || uebung === 'diktat' ? f.audio : f.consigne); };
   if (!libre) document.getElementById('u-acheter').onclick = () => ouvrirBoutique(k, id, () => router(true));
@@ -463,5 +493,6 @@ Object.assign(TEXTES.fr, {
   u_bouton: '🎮 S\'entraîner à l\'écran', u_mode_papier: '🖨️ Fiches à imprimer', u_mode_ecran: '🎮 S\'entraîner à l\'écran',
   u_mode_p: 'L\'enfant répond directement sur le téléphone, la tablette ou l\'ordinateur. Correction tout de suite.', u_papier_seul: '🖨️ papier seulement',
   u_fiche: 'Version à imprimer', u_reglages: 'Réglages (pour le parent)', u_ecouter: 'Écouter', u_nouveau: 'Nouveaux exercices',
+  u_mon_prenom: 'Mon prénom', u_ton_prenom: 'Ton prénom :', u_prenom_ex: 'par exemple Yohann', u_fille: 'fille', u_garcon: 'garçon', u_ok: 'OK', u_sans_prenom: 'Sans prénom (Amara et Noah)',
   u_verrou: '', u_fin_texte: 'Les étoiles sont gardées sur cet appareil.', u_progres: 'Meilleur score'
 });
