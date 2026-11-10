@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. Français seulement.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.5', date: '09/11/2026' };
+const VERSION_APP = { num: '0.6', date: '10/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -16,7 +16,7 @@ function changerLangue(l) {
 }
 function dessinerEntete() {
   document.getElementById('nav').innerHTML =
-    `<a href="#/">${t('accueil')}</a>${ACTIVES.map(k => `<a href="#/classe/${k}" class="nav-k">${NOMCL(k)}</a>`).join('')}<a href="#/parents">${t('parents')}</a><span id="nav-etoiles" class="nav-etoiles" title="Étoiles">⭐ ${progres().etoiles}</span>
+    `<a href="#/">${t('accueil')}</a>${ACTIVES.map(k => `<a href="#/classe/${k}" class="nav-k">${NOMCL(k)}</a>`).join('')}<a href="#/parents">${t('parents')}</a><a href="#/guide">📖 ${t('g_menu')}</a><span id="nav-etoiles" class="nav-etoiles" title="Étoiles">⭐ ${progres().etoiles}</span>
      <span class="langues" hidden></span>`;
   document.querySelectorAll('.langues button').forEach(b => b.onclick = () => changerLangue(b.dataset.l));
   document.getElementById('provisoire').textContent = t('provisoire');
@@ -26,15 +26,14 @@ function dessinerEntete() {
   document.getElementById('onglets').innerHTML =
     `<a href="#/" data-r=""><span class="ic">🏠</span><span>${t('accueil')}</span></a>` +
     ACTIVES.map(k => `<a href="#/classe/${k}" data-r="${k}"><span class="ic chiffre">${NOMCL(k)}</span><span>Classe</span></a>`).join('') +
-    `<a href="#/parents" data-r="parents"><span class="ic">👪</span><span>${t('onglet_aide')}</span></a>` +
-    `<span class="onglet-etoiles"><span class="ic">⭐</span><span id="onglet-etoiles">${progres().etoiles}</span></span>`;
+        `<a href="#/guide" data-r="guide"><span class="ic">📖</span><span>${t('onglet_aide')}</span></a>`;
   marquerOnglet();
   document.getElementById('pied-site').innerHTML = `${t('pied')}<br><span class="version-app" id="version-app">Version ${VERSION_APP.num} · ${VERSION_APP.date}</span>`;
 }
 
 function marquerOnglet() {
   const p = location.hash.replace(/^#\/?/, '').split('/');
-  const k = (p[0] === 'classe' || p[0] === 'fiche' || p[0] === 'ueben') ? p[1] : (p[0] === 'parents' ? 'parents' : '');
+  const k = (p[0] === 'classe' || p[0] === 'fiche' || p[0] === 'ueben') ? p[1] : (p[0] === 'parents' || p[0] === 'guide' ? 'guide' : '');
   document.querySelectorAll('#onglets a').forEach(a => a.classList.toggle('actif', a.dataset.r === k));
 }
 window.addEventListener('hashchange', marquerOnglet);
@@ -101,6 +100,7 @@ function pageAccueil() {
       <small>Mathématiques · Français</small></a>` : `
     <div class="carte-classe bientot"><span class="num">${NOMCL(k)}</span><span>${NIVEAUX[k]}</span><small>${t('bientot')}</small></div>`).join('')}
   </section>
+  ${accueilBip()}
   <section class="atouts">${t('atouts').map(([a, b]) => `<div><b>${a}</b><p>${b}</p></div>`).join('')}</section>`;
 }
 
@@ -245,6 +245,7 @@ function router(garder) {
   else if (p[0] === 'fiche') { if (!garder) etat.sol = false; pageFiche(+p[1], p[2], memo); }
   else if (p[0] === 'ueben') pageUeben(+p[1], p[2], memo);
   else if (p[0] === 'parents') pageParents();
+  else if (p[0] === 'guide') pageGuide();
   else pageAccueil();
   if (!garder) window.scrollTo(0, 0);
 }

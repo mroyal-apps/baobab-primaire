@@ -164,11 +164,12 @@ function pageUeben(k, id, memo) {
     </div>
     <div class="ueben-tete">
       <div class="perso-col"><div class="perso" id="perso">${amaraSVG()}</div><button type="button" class="nom-perso" id="nom-perso"></button></div>
-      <div class="bulle" id="bulle">Bonjour ! On y va !</div>
+      <div class="bulle" id="bulle" aria-live="polite">Bonjour ! On y va !</div>
     </div>
     <form class="form-prenom" id="form-prenom" hidden>
       <label>${t('u_ton_prenom')} <input id="in-prenom" maxlength="20" autocomplete="off" placeholder="${t('u_prenom_ex')}"></label>
-      <span class="choix-avatar"><label><input type="radio" name="avatar" value="amara"> 👧 ${t('u_fille')}</label><label><input type="radio" name="avatar" value="noah"> 👦 ${t('u_garcon')}</label></span>
+      <span class="choix-avatar"><b>${t('u_tu_es')}</b><label><input type="radio" name="genre" value="fille"> 👧 ${t('u_fille')}</label><label><input type="radio" name="genre" value="garcon"> 👦 ${t('u_garcon')}</label></span>
+      <span class="choix-avatar choix-compagnon"><b>${t('u_compagnon')}</b><label><input type="radio" name="avatar" value="robot"> 🤖 Bip</label><label><input type="radio" name="avatar" value="amara"> 👧 Amara</label><label><input type="radio" name="avatar" value="noah"> 👦 Noah</label></span>
       <button class="btn principal" type="submit">${t('u_ok')}</button>
       <button class="btn" type="button" id="b-sans-prenom">${t('u_sans_prenom')}</button>
     </form>
@@ -182,6 +183,7 @@ function pageUeben(k, id, memo) {
     <div class="ueben-outils">
       <button class="btn" id="u-lire">🔊 ${t('u_ecouter')}</button>
       <button class="btn" id="u-neu">🔄 ${t('u_nouveau')}</button>
+      <button class="btn" id="u-voix" aria-pressed="false"></button>
     </div>
     ${libre ? '' : `<p class="verrou">${t('u_verrou')}</p><button class="btn achat" id="u-acheter">${t('freischalten')}</button>`}
     <p class="consigne ueben-consigne" id="u-consigne"></p>
@@ -193,10 +195,19 @@ function pageUeben(k, id, memo) {
   let total = 0, faits = 0, etoiles = 0, f, uebung = null, qui = 'amara';
   const zone = () => document.getElementById('u-zone');
   // Le prénom de l'enfant (gardé sur cet appareil) : il remplace Amara / Noah
-  const enfant = () => { try { return JSON.parse(localStorage.getItem('baobab-primaire.enfant')) || null; } catch (e) { return null; } };
+  // v0.6 : { prenom, fille, avatar } ; avatar = le compagnon (robot Bip par défaut, ou Amara, ou Noah)
+  const enfant = () => { try { const e = JSON.parse(localStorage.getItem('baobab-primaire.enfant')); if (e && e.fille === undefined && e.avatar) e.fille = e.avatar === 'amara'; return e || null; } catch (e) { return null; } };
+  let serie = 0;     // bonnes réponses de suite
   const nomQui = () => { const e = enfant(); return e && e.prenom ? e.prenom : PERSOS[qui].nom; };
-  const majNom = () => { const b = document.getElementById('nom-perso'); if (b) b.textContent = enfant() ? '✏️ ' + nomQui() : '✏️ ' + t('u_mon_prenom'); };
-  const dire = (txt, humeur) => { document.getElementById('bulle').textContent = txt; document.getElementById('perso').innerHTML = personnageSVG(qui, humeur); };
+  const majNom = () => { const b = document.getElementById('nom-perso'), e = enfant(); if (b) b.textContent = e && e.prenom ? '✏️ ' + e.prenom : '✏️ ' + t('u_mon_prenom'); };
+  const dire = (txt, humeur, parler) => {
+    document.getElementById('bulle').textContent = txt;
+    const pe = document.getElementById('perso'); pe.innerHTML = personnageSVG(qui, humeur);
+    pe.classList.remove('bouge-content', 'bouge-triste', 'bouge-fete'); void pe.offsetWidth; if (humeur) pe.classList.add('bouge-' + humeur);
+    if (parler !== false && bipParle() && typeof lire === 'function') { etat.lent = false; lire(txt.replace(/[🔥🏆🚀🎉⭐]/gu, '')); }
+  };
+  const bonjour = () => { const e = enfant(); return (e && e.prenom ? 'Bonjour ' + e.prenom + ' ! ' : 'Bonjour ! ') + (qui === 'robot' ? 'Je suis Bip, ton robot. On travaille ensemble ! ' : 'Je suis ' + PERSOS[qui].nom + '. ') + f.consigne; };
+  const majVoix = () => { const b = document.getElementById('u-voix'); b.textContent = '🤖🔊 ' + t(bipParle() ? 'u_voix_oui' : 'u_voix_non'); b.setAttribute('aria-pressed', bipParle()); };
   const maj = () => {
     document.getElementById('compte').textContent = `${faits} / ${total}`;
     document.getElementById('jauge').style.width = (total ? 100 * faits / total : 0) + '%';
@@ -223,7 +234,7 @@ function pageUeben(k, id, memo) {
     const th = p.themes[cle] || { fois: 0, meilleur: 0 };
     th.fois++; th.meilleur = Math.max(th.meilleur, Math.round(100 * etoiles / total));
     p.themes[cle] = th; garderProgres(p); majEtoilesNav();
-    dire(etoiles === total ? 'Waouh ! Tout juste du premier coup !' : 'Terminé ! Tu as très bien travaillé.', 'fete');
+    dire(parole(etoiles === total ? 'fin_parfait' : etoiles >= total / 2 ? 'fin_bien' : 'fin_courage', enfant()), 'fete');
     sonFete();
     const fin = document.getElementById('u-fin');
     fin.hidden = false;
@@ -237,8 +248,8 @@ function pageUeben(k, id, memo) {
     const premier = !c.essais;
     faits++; if (premier) etoiles++;
     c.classList.remove('faux'); c.classList.add('ok');
-    const e = enfant(), br = BRAVO[Math.floor(Math.random() * BRAVO.length)];
-    sonJuste(); dire((e && e.prenom && Math.random() < 0.4 ? br.replace(/ !$/, ', ' + e.prenom + ' !') : br) + (premier ? ' ⭐' : ''), 'content');
+    serie = premier ? serie + 1 : 0;
+    sonJuste(); dire(parole(serie === 5 || serie === 10 ? 'serie5' : serie === 3 ? 'serie3' : 'bravo', enfant()) + (premier ? ' ⭐' : ''), 'content');
     maj(); if (faits === total) fini(); else suivant(c);
   };
   const rate = (c, attendu, indice) => {
@@ -248,11 +259,11 @@ function pageUeben(k, id, memo) {
     if (c.essais >= 3) {        // après 3 essais : on montre la solution, sans étoile
       faits++; c.classList.remove('faux'); c.classList.add('vu');
       c.montrer();
-      dire('Regarde : la solution est « ' + attendu + ' ». La prochaine fois, ça ira !', 'triste');
+      serie = 0; dire(parole('solution', enfant(), attendu), 'triste');
       maj(); if (faits === total) fini(); else suivant(c);
       return true;
     }
-    dire(indice || ENCORE[Math.floor(Math.random() * ENCORE.length)], 'triste');
+    serie = 0; dire(indice || parole(c.essais === 1 ? 'essai1' : 'essai2', enfant()), 'triste');
     return false;
   };
 
@@ -459,9 +470,9 @@ function pageUeben(k, id, memo) {
     z.innerHTML = f.rendu(true);
     total = transformer(z); faits = 0; etoiles = 0; maj();
     const e = enfant();
-    qui = e && e.avatar ? e.avatar : etat.graine % 2 ? 'noah' : 'amara';   // Amara et Noah se relaient, sauf si l'enfant a mis son prénom
-    majNom();
-    dire(e && e.prenom ? 'Bonjour ' + e.prenom + ' ! ' + f.consigne : 'Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
+    qui = e && PERSOS[e.avatar] ? e.avatar : 'robot';   // v0.6 : Bip le robot par défaut ; l'enfant peut choisir Amara ou Noah
+    majNom(); serie = 0;
+    dire(bonjour(), 'content', false);
     if (libre) setTimeout(() => suivant(null), 50);
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
@@ -470,18 +481,23 @@ function pageUeben(k, id, memo) {
   document.getElementById('nom-perso').onclick = () => {
     const e = enfant() || {}; fp.hidden = !fp.hidden;
     document.getElementById('in-prenom').value = e.prenom || '';
-    fp.querySelectorAll('input[name=avatar]').forEach(r => r.checked = r.value === (e.avatar || qui));
+    fp.querySelectorAll('input[name=avatar]').forEach(r => r.checked = r.value === qui);
+    fp.querySelectorAll('input[name=genre]').forEach(r => r.checked = e.fille === undefined ? false : r.value === (e.fille ? 'fille' : 'garcon'));
     if (!fp.hidden) document.getElementById('in-prenom').focus();
   };
   fp.onsubmit = ev => {
     ev.preventDefault();
     const prenom = document.getElementById('in-prenom').value.trim().replace(/\s+/g, ' ').slice(0, 20);
-    const av = (fp.querySelector('input[name=avatar]:checked') || {}).value || 'amara';
-    try { if (prenom) localStorage.setItem('baobab-primaire.enfant', JSON.stringify({ prenom: maj1(prenom), avatar: av })); else localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {}
+    const av = (fp.querySelector('input[name=avatar]:checked') || {}).value || 'robot';
+    const g = (fp.querySelector('input[name=genre]:checked') || {}).value;
+    const d = { avatar: av }; if (prenom) d.prenom = maj1(prenom); if (g) d.fille = g === 'fille';
+    try { localStorage.setItem('baobab-primaire.enfant', JSON.stringify(d)); } catch (e) {}
     fp.hidden = true; qui = av; majNom();
-    dire(prenom ? 'Bonjour ' + maj1(prenom) + ' ! ' + f.consigne : 'Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
+    dire(bonjour(), 'content');
   };
-  document.getElementById('b-sans-prenom').onclick = () => { try { localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {} fp.hidden = true; qui = etat.graine % 2 ? 'noah' : 'amara'; majNom(); dire('Bonjour ! Je suis ' + PERSOS[qui].nom + '. ' + f.consigne, 'content'); };
+  document.getElementById('b-sans-prenom').onclick = () => { try { localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {} fp.hidden = true; qui = 'robot'; majNom(); dire(bonjour(), 'content'); };
+  document.getElementById('u-voix').onclick = () => { changerBipParle(); majVoix(); if (bipParle()) dire(qui === 'robot' ? 'Bip bip ! Maintenant je parle.' : 'Maintenant je parle.', 'content'); else if ('speechSynthesis' in window) speechSynthesis.cancel(); };
+  majVoix();
   document.getElementById('u-neu').onclick = () => { etat.graine = nouvelleGraine(); dessiner(); };
   document.getElementById('u-lire').onclick = () => { etat.lent = uebung === 'diktat' || !!f.dictee; lire(f.lireTexte || f.dictee || uebung === 'lesen' || uebung === 'geschichte' || uebung === 'diktat' ? f.audio : f.consigne); };
   if (!libre) document.getElementById('u-acheter').onclick = () => ouvrirBoutique(k, id, () => router(true));
@@ -493,6 +509,6 @@ Object.assign(TEXTES.fr, {
   u_bouton: '🎮 S\'entraîner à l\'écran', u_mode_papier: '🖨️ Fiches à imprimer', u_mode_ecran: '🎮 S\'entraîner à l\'écran',
   u_mode_p: 'L\'enfant répond directement sur le téléphone, la tablette ou l\'ordinateur. Correction tout de suite.', u_papier_seul: '🖨️ papier seulement',
   u_fiche: 'Version à imprimer', u_reglages: 'Réglages (pour le parent)', u_ecouter: 'Écouter', u_nouveau: 'Nouveaux exercices',
-  u_mon_prenom: 'Mon prénom', u_ton_prenom: 'Ton prénom :', u_prenom_ex: 'par exemple Yohann', u_fille: 'fille', u_garcon: 'garçon', u_ok: 'OK', u_sans_prenom: 'Sans prénom (Amara et Noah)',
+  u_mon_prenom: 'Mon prénom', u_ton_prenom: 'Ton prénom :', u_prenom_ex: 'par exemple Yohann', u_fille: 'fille', u_garcon: 'garçon', u_ok: 'OK', u_sans_prenom: 'Effacer',
   u_verrou: '', u_fin_texte: 'Les étoiles sont gardées sur cet appareil.', u_progres: 'Meilleur score'
 });

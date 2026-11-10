@@ -428,8 +428,34 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .nb-fiches select { width: auto; padding: .2em .4em; }
 /* v0.5 : le prénom de l'enfant */
 .perso-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; }
-.nom-perso { background: none; border: 1.5px dashed var(--vert); border-radius: 10px; color: var(--vert); font: inherit; font-size: .8rem; font-weight: 700; padding: 1px 6px; cursor: pointer; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nom-perso { background: none; border: 1.5px dashed var(--vert); border-radius: 10px; color: var(--vert); font: inherit; font-size: .8rem; font-weight: 700; padding: 1px 6px; cursor: pointer; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .form-prenom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: #fff; border: 2px solid var(--vert); border-radius: 14px; padding: 10px 14px; margin: 8px 0 12px; }
 .form-prenom input[type=text], .form-prenom #in-prenom { font: inherit; font-size: 1.1rem; padding: 6px 10px; border: 2px solid #c9d3d0; border-radius: 10px; width: 11em; }
 .form-prenom .choix-avatar { display: flex; gap: 12px; font-weight: 700; }
 .form-prenom .btn { width: auto; margin: 0; }
+
+
+/* v0.6 : Bip le robot compagnon + guide */
+.perso.bouge-content svg { animation: bip-saute .5s ease; }
+.perso.bouge-triste svg { animation: bip-penche .7s ease; }
+.perso.bouge-fete svg { animation: bip-fete 1s ease; }
+@keyframes bip-saute { 0%,100% { transform:translateY(0); } 40% { transform:translateY(-10px); } }
+@keyframes bip-penche { 0%,100% { transform:rotate(0); } 30% { transform:rotate(-7deg); } 65% { transform:rotate(5deg); } }
+@keyframes bip-fete { 0% { transform:scale(1) rotate(0); } 30% { transform:scale(1.12) rotate(-8deg); } 60% { transform:scale(1.12) rotate(8deg); } 100% { transform:scale(1) rotate(0); } }
+.perso-robot .lumiere { animation: bip-lumiere 1.6s infinite; }
+@keyframes bip-lumiere { 50% { opacity:.45; } }
+@media (prefers-reduced-motion: reduce) { .perso svg, .perso-robot .lumiere { animation:none !important; } }
+.choix-compagnon { flex-wrap:wrap; }
+#u-voix[aria-pressed="true"] { background:#eef5ff; border-color:#3d8bfd; }
+.carte-bip { display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit; background:#eef5ff; border:2px solid #bcd6ff; border-radius:18px; padding:10px 16px; margin:16px auto; max-width:640px; }
+.carte-bip .bip-mini svg { width:72px; height:72px; display:block; }
+.carte-bip u { color:#1f58b3; font-weight:700; }
+.page-guide .guide-tete { margin:8px 0 14px; }
+.guide-sommaire { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
+.guide-sommaire a { text-decoration:none; background:#fff6d6; border:1px solid var(--or); color:#5a4300; border-radius:20px; padding:5px 12px; font-weight:700; font-size:.92rem; }
+.guide-carte { background:#fff; border:1px solid #e3ddd0; border-radius:16px; padding:12px 18px; margin:0 0 12px; scroll-margin-top:80px; }
+.guide-carte h2 { font-size:1.12rem; margin:4px 0 8px; display:flex; align-items:center; gap:8px; }
+.guide-ic { font-size:1.5rem; }
+.guide-carte ol { margin:0; padding-left:1.3em; line-height:1.55; }
+.guide-carte li { margin:4px 0; }
+.guide-fin { text-align:center; margin:20px 0; }

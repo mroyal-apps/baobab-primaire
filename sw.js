@@ -1,6 +1,6 @@
 // Service worker : l'appli marche hors ligne.
-const CACHE = 'baobab-primaire-20261109-1956';
-const FILES = ['./', './index.html', './style.css', './data.js', './textes.js', './aide.js', './generateurs.js', './generateurs2.js', './generateurs3.js', './francais.js', './ueben.js', './version-test.js', './app.js', './installer.js',
+const CACHE = 'baobab-primaire-20261110-1520';
+const FILES = ['./', './index.html', './style.css', './data.js', './textes.js', './aide.js', './generateurs.js', './generateurs2.js', './generateurs3.js', './francais.js', './ueben.js', './robot.js', './guide.js', './version-test.js', './app.js', './installer.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 // Installation : on télécharge des fichiers neufs (pas ceux gardés par le navigateur) et on active tout de suite.
 self.addEventListener('install', e => {
