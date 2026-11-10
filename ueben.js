@@ -200,11 +200,12 @@ function pageUeben(k, id, memo) {
   let serie = 0;     // bonnes réponses de suite
   const nomQui = () => { const e = enfant(); return e && e.prenom ? e.prenom : PERSOS[qui].nom; };
   const majNom = () => { const b = document.getElementById('nom-perso'), e = enfant(); if (b) b.textContent = e && e.prenom ? '✏️ ' + e.prenom : '✏️ ' + t('u_mon_prenom'); };
-  const dire = (txt, humeur, parler) => {
+  const dire = (txt, humeur, parler, cle) => {
     document.getElementById('bulle').textContent = txt;
     const pe = document.getElementById('perso'); pe.innerHTML = personnageSVG(qui, humeur);
     pe.classList.remove('bouge-content', 'bouge-triste', 'bouge-fete'); void pe.offsetWidth; if (humeur) pe.classList.add('bouge-' + humeur);
     if (parler !== false && bipParle() && typeof lire === 'function') { etat.lent = false; lire(txt.replace(/[🔥🏆🚀🎉⭐]/gu, '')); }
+    if (typeof bipReagit === 'function') bipReagit(pe, humeur, txt, cle);   // v0.7 : Bip bouge
   };
   const bonjour = () => { const e = enfant(); return (e && e.prenom ? 'Bonjour ' + e.prenom + ' ! ' : 'Bonjour ! ') + (qui === 'robot' ? 'Je suis Bip, ton robot. On travaille ensemble ! ' : 'Je suis ' + PERSOS[qui].nom + '. ') + f.consigne; };
   const majVoix = () => { const b = document.getElementById('u-voix'); b.textContent = '🤖🔊 ' + t(bipParle() ? 'u_voix_oui' : 'u_voix_non'); b.setAttribute('aria-pressed', bipParle()); };
@@ -249,7 +250,8 @@ function pageUeben(k, id, memo) {
     faits++; if (premier) etoiles++;
     c.classList.remove('faux'); c.classList.add('ok');
     serie = premier ? serie + 1 : 0;
-    sonJuste(); dire(parole(serie === 5 || serie === 10 ? 'serie5' : serie === 3 ? 'serie3' : 'bravo', enfant()) + (premier ? ' ⭐' : ''), 'content');
+    const cleSerie = serie === 5 || serie === 10 ? 'serie5' : serie === 3 ? 'serie3' : 'bravo';
+    sonJuste(); dire(parole(cleSerie, enfant()) + (premier ? ' ⭐' : ''), 'content', undefined, cleSerie);
     maj(); if (faits === total) fini(); else suivant(c);
   };
   const rate = (c, attendu, indice) => {
@@ -472,10 +474,11 @@ function pageUeben(k, id, memo) {
     const e = enfant();
     qui = e && PERSOS[e.avatar] ? e.avatar : 'robot';   // v0.6 : Bip le robot par défaut ; l'enfant peut choisir Amara ou Noah
     majNom(); serie = 0;
-    dire(bonjour(), 'content', false);
+    dire(bonjour(), 'content', false, 'bonjour');
     if (libre) setTimeout(() => suivant(null), 50);
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
+  if (typeof bipVivant === 'function') bipVivant(document.getElementById('perso'), { dort: true });   // v0.7
   // Formulaire « mon prénom »
   const fp = document.getElementById('form-prenom');
   document.getElementById('nom-perso').onclick = () => {
@@ -493,9 +496,9 @@ function pageUeben(k, id, memo) {
     const d = { avatar: av }; if (prenom) d.prenom = maj1(prenom); if (g) d.fille = g === 'fille';
     try { localStorage.setItem('baobab-primaire.enfant', JSON.stringify(d)); } catch (e) {}
     fp.hidden = true; qui = av; majNom();
-    dire(bonjour(), 'content');
+    dire(bonjour(), 'content', undefined, 'bonjour');
   };
-  document.getElementById('b-sans-prenom').onclick = () => { try { localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {} fp.hidden = true; qui = 'robot'; majNom(); dire(bonjour(), 'content'); };
+  document.getElementById('b-sans-prenom').onclick = () => { try { localStorage.removeItem('baobab-primaire.enfant'); } catch (e) {} fp.hidden = true; qui = 'robot'; majNom(); dire(bonjour(), 'content', undefined, 'bonjour'); };
   document.getElementById('u-voix').onclick = () => { changerBipParle(); majVoix(); if (bipParle()) dire(qui === 'robot' ? 'Bip bip ! Maintenant je parle.' : 'Maintenant je parle.', 'content'); else if ('speechSynthesis' in window) speechSynthesis.cancel(); };
   majVoix();
   document.getElementById('u-neu').onclick = () => { etat.graine = nouvelleGraine(); dessiner(); };

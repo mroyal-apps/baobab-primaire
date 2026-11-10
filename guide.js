@@ -19,6 +19,8 @@ const GUIDE = [
     'Bip t\'accompagne pendant les exercices à l\'écran.',
     'Quand c\'est juste, il te félicite. Quand c\'est faux, il t\'encourage. À la fin, il fait la fête avec toi.',
     'Touche « 🤖🔊 Bip parle » pour que Bip parle à voix haute. Touche encore pour l\'arrêter.',
+    'Bip est vivant : il cligne des yeux, il regarde ton doigt, sa bouche bouge quand il parle. Touche-le : il rit, il saute ou il tourne !',
+    'Si tu ne fais rien pendant un moment, Bip s\'endort (Z z z). Touche l\'écran pour le réveiller.',
     'Tu préfères Amara ou Noah ? Touche « ✏️ Mon prénom » et choisis ton compagnon.']],
   ['✏️', 'Mon prénom', [
     'Sous le compagnon, touche « ✏️ Mon prénom ».',
