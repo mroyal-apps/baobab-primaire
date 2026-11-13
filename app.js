@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. Français seulement.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.7.1', date: '13/11/2026' };
+const VERSION_APP = { num: '0.7.2', date: '13/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -213,7 +213,7 @@ const COMMENT = {
     ['🔊 Le son', 'Le bouton « Écouter » lit la consigne en français. La voix vient de l\'appareil. Si tu n\'entends rien, monte le volume.'],
     ['📴 Sans internet', 'Après la première ouverture avec internet, l\'appli marche aussi sans internet. Pratique quand la connexion est chère ou coupée.'],
     ['🖨️ Plusieurs fiches', 'Sur la page d\'une fiche, choisis « Nombre de fiches différentes » (1 à 10). Chaque fiche a d\'autres exercices et ses solutions. Puis touche « Imprimer / PDF ».'],
-    ['📚 Le programme', 'Les exercices suivent le programme officiel du primaire au Cameroun (MINEDUB 2018). Version 0.4 : mathématiques et français de la SIL au CM2, vérifiés avec les 3 documents officiels (SIL-CP, CE1-CE2, CM1-CM2). Un enseignant doit encore tout relire.'],
+    ['📚 Le programme', 'Les exercices suivent le programme officiel du primaire au Cameroun (MINEDUB 2018). Mathématiques et français de la SIL au CM2, vérifiés avec les 3 documents officiels (SIL-CP, CE1-CE2, CM1-CM2). Un enseignant doit encore tout relire.'],
     ['🔒 Les données', 'Pas de compte, pas de nom. Les étoiles restent seulement sur cet appareil.']] }
 };
 function commentHTML() {
