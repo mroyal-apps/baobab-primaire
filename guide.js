@@ -1,4 +1,4 @@
-// Baobab Primaire – v0.6 : guide « Comment utiliser l'appli » (demande de Cedric, 10/11/2026)
+// Baobab Primaire – v0.6 : guide (v0.7.1 : mouvements de Bip ajoutés) « Comment utiliser l'appli » (demande de Cedric, 10/11/2026)
 // Page #/guide : les fonctions clés expliquées en phrases courtes, étape par étape. Bip le robot présente le guide.
 
 const GUIDE = [
@@ -20,7 +20,11 @@ const GUIDE = [
     'Quand c\'est juste, il te félicite. Quand c\'est faux, il t\'encourage. À la fin, il fait la fête avec toi.',
     'Touche « 🤖🔊 Bip parle » pour que Bip parle à voix haute. Touche encore pour l\'arrêter.',
     'Bip est vivant : il cligne des yeux, il regarde ton doigt, sa bouche bouge quand il parle. Touche-le : il rit, il saute ou il tourne !',
+    'Après 3 bonnes réponses de suite, Bip fait un grand saut. Hop !',
+    'Après 5 bonnes réponses de suite, Bip fait un salto (il tourne en l\'air).',
+    'À la fin d\'une fiche, Bip danse, des confettis tombent sur tout l\'écran et un petit Bip traverse l\'écran en roulant (vroum !).',
     'Si tu ne fais rien pendant un moment, Bip s\'endort (Z z z). Touche l\'écran pour le réveiller.',
+    'Si l\'appareil demande « réduire les animations » (dans ses réglages), Bip reste calme : pas de sauts, pas de confettis.',
     'Tu préfères Amara ou Noah ? Touche « ✏️ Mon prénom » et choisis ton compagnon.']],
   ['✏️', 'Mon prénom', [
     'Sous le compagnon, touche « ✏️ Mon prénom ».',
