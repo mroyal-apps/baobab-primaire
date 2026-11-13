@@ -296,6 +296,8 @@ function pageUeben(k, id, memo) {
       if (!fin) c.select();
     };
     c.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); verifier(); } });
+    // v0.7.2 : sur téléphone, le clavier ne doit pas cacher la case → on la remet au milieu de l'écran
+    c.addEventListener('focus', () => { setTimeout(() => { try { const doux = !matchMedia('(prefers-reduced-motion: reduce)').matches; c.scrollIntoView({ block: 'center', behavior: doux ? 'smooth' : 'auto' }); } catch (e) {} }, 250); });
     c.addEventListener('change', verifier);
     if (!opts.audio) return c;
     const w = document.createElement('span'); w.className = 'u-audio';     // Diktat : 🔊 + case
@@ -311,7 +313,7 @@ function pageUeben(k, id, memo) {
       b.onclick = () => {
         if (termine(c)) return;
         if (x === att) { b.classList.add('bon'); c.querySelectorAll('button').forEach(y => y.disabled = true); reussi(c); }
-        else { b.disabled = true; rate(c, att); }
+        else { b.disabled = true; b.classList.add('non'); rate(c, att); }
       };
       c.appendChild(b);
     });
@@ -475,7 +477,7 @@ function pageUeben(k, id, memo) {
     qui = e && PERSOS[e.avatar] ? e.avatar : 'robot';   // v0.6 : Bip le robot par défaut ; l'enfant peut choisir Amara ou Noah
     majNom(); serie = 0;
     dire(bonjour(), 'content', false, 'bonjour');
-    if (libre) setTimeout(() => suivant(null), 50);
+    if (libre) setTimeout(() => { if (document.getElementById('u-zone')) suivant(null); }, 50);   // la page peut avoir été quittée entre-temps
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
   if (typeof bipVivant === 'function') bipVivant(document.getElementById('perso'), { dort: true });   // v0.7
